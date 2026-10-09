@@ -1,14 +1,14 @@
 {
 	"folders": [
 		{
-			"name": "VSCodeWorkspace",
-			"path": "/media/admin-pc/Edrive/Yocto_Builds/rpi5_udemy/rpi5_yocto_udemy/workspace"
+			"name":"VSCodeWorkSpace",
+			"path":"/media/admin-pc/Yocto_EXT4/Yocto_Builds/rpi5_yocto/workspace"
 		},
 		{
-			"path": "/media/admin-pc/Edrive/Yocto_Builds/rpi5_udemy/rpi5_yocto_udemy/docs"
+			"path": "/media/admin-pc/Yocto_EXT4/Yocto_Builds/rpi5_yocto/docs"
 		},
 		{
-			"path": "/media/admin-pc/Edrive/Yocto_Builds/rpi5_udemy/rpi5_yocto_udemy/poky"
+			"path": "/media/admin-pc/Yocto_EXT4/Yocto_Builds/rpi5_yocto/poky"
 		},
 	],
 	"settings": {
@@ -50,6 +50,10 @@
 			"**/build/downloads/**": true,
 			"**/build/sstate-cache/**": true,
 			"**/build/tmp/**": true
+		},
+		"files.associations": {
+			"*.conf": "bitbake",
+			"*.inc": "bitbake"
 		}
 	}
 }

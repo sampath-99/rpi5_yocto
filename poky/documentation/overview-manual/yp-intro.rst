@@ -23,14 +23,8 @@ comes to delivering embedded software stacks. The project allows
 software customizations and build interchange for multiple hardware
 platforms as well as software stacks that can be maintained and scaled.
 
-.. image:: figures/key-dev-elements.png
+.. image:: svg/key-dev-elements.*
     :width: 100%
-
-For further introductory information on the Yocto Project, you might be
-interested in this
-`article <https://www.embedded.com/electronics-blogs/say-what-/4458600/Why-the-Yocto-Project-for-my-IoT-Project->`__
-by Drew Moseley and in this short introductory
-`video <https://www.youtube.com/watch?v=utZpKM7i5Z4>`__.
 
 The remainder of this section overviews advantages and challenges tied
 to the Yocto Project.
@@ -44,7 +38,7 @@ Here are features and advantages of the Yocto Project:
    system, software, and service vendors adopt and support the Yocto
    Project in their products and services. For a look at the Yocto
    Project community and the companies involved with the Yocto Project,
-   see the "COMMUNITY" and "ECOSYSTEM" tabs on the
+   see the "COMMUNITY" and "ABOUT" tabs on the
    :yocto_home:`Yocto Project <>` home page.
 
 -  *Architecture Agnostic:* Yocto Project supports Intel, ARM, MIPS,
@@ -60,10 +54,9 @@ Here are features and advantages of the Yocto Project:
    move between architectures without moving to new development
    environments. Additionally, if you have used the Yocto Project to
    create an image or application and you find yourself not able to
-   support it, commercial Linux vendors such as Wind River, Mentor
-   Graphics, Timesys, and ENEA could take it and provide ongoing
-   support. These vendors have offerings that are built using the Yocto
-   Project.
+   support it, commercial Linux vendors listed on :yocto_home:`/members/` and
+   :yocto_home:`/about/participants/` could take it and provide ongoing
+   support.
 
 -  *Flexibility:* Corporations use the Yocto Project many different
    ways. One example is to create an internal Linux distribution as a
@@ -172,11 +165,12 @@ Here are challenges you might encounter when developing using the Yocto Project:
    changes on the development system within the BitBake environment and
    then deploying only the updated packages to the target.
 
-   The Yocto Project :term:`OpenEmbedded Build System`
-   produces packages
-   in standard formats (i.e. RPM, DEB, IPK, and TAR). You can deploy
-   these packages into the running system on the target by using
-   utilities on the target such as ``rpm`` or ``ipk``.
+   The Yocto Project :term:`OpenEmbedded Build System` produces packages
+   in standard formats (i.e. RPM, DEB and/or IPK). If you included the
+   runtime package management feature in your image, you can deploy
+   these packages into the running system on the target by using the
+   corresponding utilities on the target such as
+   ``rpm``/``dnf``, ``dpkg``/``apt`` or ``opkg``.
 
 -  *Initial Build Times Can be Significant:* Long initial build times
    are unfortunately unavoidable due to the large number of packages
@@ -291,13 +285,6 @@ Development Tools
 Here are tools that help you develop images and applications using
 the Yocto Project:
 
--  *CROPS:* `CROPS <https://github.com/crops/poky-container/>`__ is an
-   open source, cross-platform development framework that leverages
-   `Docker Containers <https://www.docker.com/>`__. CROPS provides an
-   easily managed, extensible environment that allows you to build
-   binaries for a variety of architectures on Windows, Linux and Mac OS
-   X hosts.
-
 -  *devtool:* This command-line tool is available as part of the
    extensible SDK (eSDK) and is its cornerstone. You can use ``devtool``
    to help build, test, and package software within the eSDK. You can
@@ -387,7 +374,7 @@ Yocto Project:
 
    .. note::
 
-      AutoBuilder is based on buildbot.
+      AutoBuilder is based on `buildbot <https://buildbot.net/>`__.
 
    A goal of the Yocto Project is to lead the open source industry with
    a project that automates testing and QA procedures. In doing so, the
@@ -400,7 +387,7 @@ Yocto Project:
    Autobuilder :doc:`here </test-manual/understand-autobuilder>`.
 
 -  *Pseudo:* Pseudo is the Yocto Project implementation of
-   `fakeroot <http://man.he.net/man1/fakeroot>`__, which is used to run
+   :manpage:`fakeroot <fakeroot(1)>`, which is used to run
    commands in an environment that seemingly has root privileges.
 
    During a build, it can be necessary to perform operations that
@@ -540,9 +527,9 @@ Linux.
    Build Appliance was useful as a way to try out development in the
    Yocto Project environment.
 
-#. *CROPS:* The final and best solution available now for developing
-   using the Yocto Project on a system not native to Linux is with
-   :ref:`CROPS <overview-manual/yp-intro:development tools>`.
+#. *CROPS:* Used to be a solution available for developing
+   using the Yocto Project on a system not native to Linux (see
+   https://github.com/crops/poky-container).
 
 Development Methods
 ===================
@@ -576,25 +563,10 @@ Build Host runs, you have several choices.
    ":ref:`dev-manual/start:setting up a native linux host`"
    section in the Yocto Project Development Tasks Manual.
 
--  *CROss PlatformS (CROPS):* Typically, you use
-   `CROPS <https://github.com/crops/poky-container/>`__, which leverages
-   `Docker Containers <https://www.docker.com/>`__, to set up a Build
-   Host that is not running Linux (e.g. Microsoft Windows or macOS).
-
-   .. note::
-
-      You can, however, use CROPS on a Linux-based system.
-
-   CROPS is an open source, cross-platform development framework that
-   provides an easily managed, extensible environment for building
-   binaries targeted for a variety of architectures on Windows, macOS,
-   or Linux hosts. Once the Build Host is set up using CROPS, you can
-   prepare a shell environment to mimic that of a shell being used on a
-   system natively running Linux.
-
-   For information on how to set up a Build Host with CROPS, see the
-   ":ref:`dev-manual/start:setting up to use cross platforms (crops)`"
-   section in the Yocto Project Development Tasks Manual.
+-  *OCI Containers:* Typically, you use an :wikipedia:`OCI container
+   <Open_Container_Initiative>` (with `Docker <https://www.docker.com/>`__ or
+   `Podman <https://podman.io/>`__ for example), to set up a :term:`Build
+   Host` that is not running Linux (e.g. Microsoft Windows or macOS).
 
 -  *Windows Subsystem For Linux (WSL 2):* You may use Windows Subsystem
    For Linux version 2 to set up a Build Host using Windows 10 or later,
@@ -734,7 +706,7 @@ The :term:`OpenEmbedded Build System` uses a "workflow" to
 accomplish image and SDK generation. The following figure overviews that
 workflow:
 
-.. image:: figures/YP-flow-diagram.png
+.. image:: svg/yp-flow-diagram.*
     :width: 100%
 
 Here is a brief summary of the "workflow":
@@ -760,7 +732,8 @@ Here is a brief summary of the "workflow":
    package feed that is used to create the final root file image.
 
 #. The build system generates the file system image and a customized
-   Extensible SDK (eSDK) for application development in parallel.
+   :doc:`SDK </sdk-manual/index>` (Software Development Kit) for application
+   development in parallel.
 
 For a very detailed look at this workflow, see the
 ":ref:`overview-manual/concepts:openembedded build system concepts`" section.
@@ -786,7 +759,9 @@ helpful for getting started:
    their code available to other application developers. For information
    on the eSDK, see the :doc:`/sdk-manual/index` manual.
 
--  *Layer:* A collection of related recipes. Layers allow you to
+-  *Layer:* A collection of related metadata, which could include any of
+   recipes, machine configuration files, distro configuration files
+   and/or class files. Layers allow you to
    consolidate related metadata to customize your build. Layers also
    isolate information used when building for multiple architectures.
    Layers are hierarchical in their ability to override previous

@@ -45,6 +45,45 @@ release process validates the content of the new branch.
    Realize that there can be patches merged onto the stable release
    branches as and when they become available.
 
+.. _ref-yp-development-cycle:
+
+Development Cycle
+=================
+
+As explained in the previous :ref:`ref-manual/release-process:Major and Minor
+Release Cadence` section, a new release comes out every six months.
+
+During this six-months period of time, the Yocto Project releases four
+"Milestone" releases which represent distinct points of time. The milestone
+releases are tested through the :ref:`ref-manual/release-process:Testing and
+Quality Assurance` process and helps spotting issues before the actual release
+is out.
+
+The time span between milestone releases can vary, but they are in general
+evenly spaced out during this six-months period of time.
+
+These milestone releases are tagged with a capital "M" after the future release
+tag name. For example, the milestone tags "&DISTRO_RELEASE_SERIES;M1",
+"&DISTRO_RELEASE_SERIES;M2", and "&DISTRO_RELEASE_SERIES;M3" are released before
+the actual "&DISTRO_RELEASE_SERIES;" release.
+
+.. note::
+
+   The fourth milestone (M4) is not actually released and announced, but
+   represents a point of time for the Quality Assurance team to start the
+   :ref:`ref-manual/release-process:Testing and Quality Assurance` process
+   before tagging and delivering the final release.
+
+After the third milestone release (M3), the Yocto Project enters **Feature
+Freeze**. This means that the maintainers of :term:`OpenEmbedded-Core
+(OE-Core)`, :term:`BitBake` and other core repositories stop accepting
+significant changes on the "master" branch. Changes that may be accepted are
+minor upgrades to core components and security/bug fixes.
+
+During feature freeze, a new branch is created and maintained separately to
+test new features and enhancements received from contributors, but these changes
+will only make it to the master branch after the release is out.
+
 Major Release Codenames
 =======================
 
@@ -62,7 +101,8 @@ codename are likely to be compatible and thus work together.
 
 Releases are given a nominal release version as well but the codename is
 used in repositories for this reason. You can find information on Yocto
-Project releases and codenames at :yocto_wiki:`/Releases`.
+Project releases and codenames in the :yocto_home:`Releases page
+</development/releases/>`.
 
 Our :doc:`/migration-guides/index` detail how to migrate from one release of
 the Yocto Project to the next.
@@ -103,16 +143,21 @@ have reached their End of Life (EOL) won't receive such updates.
 
 This started with version 3.1 ("Dunfell"), released in April 2020, which
 the project initially committed to supporting for two years, but this duration
-was later extended to four years. Similarly, the following :term:`LTS` release,
-version 4.0 ("Kirkstone"), was released two years later in May 2022 and the
-project committed to supporting it for four years too.
+was later extended to four years.
 
-Therefore, a new :term:`LTS` release is made every two years and is supported
-for four years. This offers more stability to project users and leaves more
-time to upgrade to the following :term:`LTS` release.
+A new :term:`LTS` release is made every two years and is supported for four
+years. This offers more stability to project users and leaves more time to
+upgrade to the following :term:`LTS` release.
+
+The currently supported :term:`LTS` releases are:
+
+-  Version 6.0 ("Wrynose"), released in May 2026 and supported until April 2030.
+-  Version 5.0 ("Scarthgap"), released in April 2024 and supported until April 2028.
 
 See :yocto_wiki:`/Stable_Release_and_LTS` for details about the management
 of stable and :term:`LTS` releases.
+
+This documentation was built for the &DISTRO_NAME; release.
 
 .. image:: svg/releases.*
    :width: 100%
@@ -143,8 +188,8 @@ Additionally, because the test strategies are visible to you as a
 developer, you can validate your projects. This section overviews the
 available test infrastructure used in the Yocto Project. For information
 on how to run available tests on your projects, see the
-":ref:`dev-manual/runtime-testing:performing automated runtime testing`"
-section in the Yocto Project Development Tasks Manual.
+":ref:`test-manual/runtime-testing:performing automated runtime testing`"
+section in the Yocto Project Test Environment Manual.
 
 The QA/testing infrastructure is woven into the project to the point
 where core developers take some of it for granted. The infrastructure
@@ -170,7 +215,7 @@ consists of the following pieces:
    operation and functions. However, the test can also use the IP
    address of a machine to test.
 
--  :ref:`ptest <dev-manual/packages:testing packages with ptest>`:
+-  :ref:`ptest <test-manual/ptest:testing packages with ptest>`:
    Runs tests against packages produced during the build for a given
    piece of software. The test allows the packages to be run within a
    target image.
@@ -185,7 +230,7 @@ effort has been made to automate the tests so that more people can use
 them and the Yocto Project development team can run them faster and more
 efficiently.
 
-The Yocto Project's main Autobuilder (&YOCTO_AB_URL;) publicly tests each Yocto
+The Yocto Project's main :yocto_ab:`Autobuilder <>` publicly tests each Yocto
 Project release's code in the :oe_git:`openembedded-core </openembedded-core>`,
 :yocto_git:`poky </poky>` and :oe_git:`bitbake </bitbake>` repositories. The
 testing occurs for both the current state of the "master" branch and also for

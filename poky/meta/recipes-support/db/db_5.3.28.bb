@@ -27,6 +27,7 @@ SRC_URI += "file://fix-parallel-build.patch \
             file://sequence-type.patch \
             file://0001-Fix-libc-compatibility-by-renaming-atomic_init-API.patch \
             file://0001-clock-Do-not-define-own-timespec.patch \
+            file://0001-Fix-implicit-int-warnings.patch \
            "
 # We are not interested in official latest 6.x versions;
 # let's track what debian is using.
@@ -72,7 +73,11 @@ AUTOTOOLS_SCRIPT_PATH = "${S}/dist"
 # configure.
 CONFIG_SITE = ""
 
+CFLAGS:append = " -std=gnu99"
+
 oe_runconf:prepend() {
+	export CFLAGS="${CFLAGS}"
+
 	. ${S}/dist/RELEASE
 	# Edit version information we couldn't pre-compute.
 	sed -i -e "s/__EDIT_DB_VERSION_FAMILY__/$DB_VERSION_FAMILY/g" \

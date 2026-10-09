@@ -7,10 +7,10 @@ Board Support Packages (BSP) --- Developer's Guide
 A Board Support Package (BSP) is a collection of information that
 defines how to support a particular hardware device, set of devices, or
 hardware platform. The BSP includes information about the hardware
-features present on the device and kernel configuration information
-along with any additional hardware drivers required. The BSP also lists
-any additional software components required in addition to a generic
-Linux software stack for both essential and optional platform features.
+features present on the device, any essential bootloader, kernel and
+device tree configuration, along with any additional hardware drivers required.
+The BSP also lists any additional software components required in addition to
+a generic Linux software stack for both essential and optional platform features.
 
 This guide presents information about BSP layers, defines a structure
 for components so that BSPs follow a commonly understood layout,
@@ -60,7 +60,7 @@ repository unto itself and clicking on the layer name displays two URLs
 from which you can clone the layer's repository to your local system.
 Here is an example that clones the Raspberry Pi BSP layer::
 
-   $ git clone git://git.yoctoproject.org/meta-raspberrypi
+   $ git clone https://git.yoctoproject.org/meta-raspberrypi
 
 In addition to BSP layers, the ``meta-yocto-bsp`` layer is part of the
 shipped ``poky`` repository. The ``meta-yocto-bsp`` layer maintains
@@ -81,7 +81,7 @@ directory of that Layer. This directory is what you add to the
 ``conf/bblayers.conf`` file found in your
 :term:`Build Directory`, which is
 established after you run the OpenEmbedded build environment setup
-script (i.e. :ref:`ref-manual/structure:\`\`oe-init-build-env\`\``).
+script (i.e. :ref:`ref-manual/structure:``oe-init-build-env```).
 Adding the root directory allows the :term:`OpenEmbedded Build System`
 to recognize the BSP
 layer and from it build an image. Here is an example::
@@ -147,8 +147,7 @@ section.
 #. *Set Up the Build Environment:* Be sure you are set up to use BitBake
    in a shell. See the ":ref:`dev-manual/start:preparing the build host`"
    section in the Yocto Project Development Tasks Manual for information on how
-   to get a build host ready that is either a native Linux machine or a machine
-   that uses CROPS.
+   to get a :term:`build host` ready.
 
 #. *Clone the poky Repository:* You need to have a local copy of the
    Yocto Project :term:`Source Directory` (i.e. a local
@@ -166,7 +165,7 @@ section.
    BSPs, which are maintained in their own layers or in layers designed
    to contain several BSPs. To get an idea of machine support through
    BSP layers, you can look at the
-   :yocto_dl:`index of machines </releases/yocto/yocto-&DISTRO;/machines>`
+   :yocto_dl:`index of machines </releases/yocto/&DISTRO_REL_LATEST_TAG;/machines>`
    for the release.
 
 #. *Optionally Clone the meta-intel BSP Layer:* If your hardware is
@@ -182,7 +181,7 @@ section.
 
    #. *Clone the Layer:* ::
 
-         $ git clone git://git.yoctoproject.org/meta-intel.git
+         $ git clone https://git.yoctoproject.org/meta-intel.git
          Cloning into 'meta-intel'...
          remote: Counting objects: 15585, done.
          remote: Compressing objects: 100% (5056/5056), done.
@@ -218,7 +217,7 @@ section.
    your hardware most closely matches the ``meta-raspberrypi``, clone
    that layer::
 
-      $ git clone git://git.yoctoproject.org/meta-raspberrypi
+      $ git clone https://git.yoctoproject.org/meta-raspberrypi
       Cloning into 'meta-raspberrypi'...
       remote: Counting objects: 4743, done.
       remote: Compressing objects: 100% (2185/2185), done.
@@ -229,7 +228,7 @@ section.
 
 #. *Initialize the Build Environment:* While in the root directory of
    the Source Directory (i.e. ``poky``), run the
-   :ref:`ref-manual/structure:\`\`oe-init-build-env\`\`` environment
+   :ref:`ref-manual/structure:``oe-init-build-env``` environment
    setup script to define the OpenEmbedded build environment on your
    build host. ::
 
@@ -674,21 +673,21 @@ to the kernel recipe by using a similarly named append file, which is
 located in the BSP Layer for your target device (e.g. the
 ``meta-bsp_root_name/recipes-kernel/linux`` directory).
 
-Suppose you are using the ``linux-yocto_4.4.bb`` recipe to build the
+Suppose you are using the ``linux-yocto_6.12.bb`` recipe to build the
 kernel. In other words, you have selected the kernel in your
 ``"bsp_root_name".conf`` file by adding
 :term:`PREFERRED_PROVIDER` and :term:`PREFERRED_VERSION`
 statements as follows::
 
    PREFERRED_PROVIDER_virtual/kernel ?= "linux-yocto"
-   PREFERRED_VERSION_linux-yocto ?= "4.4%"
+   PREFERRED_VERSION_linux-yocto ?= "6.12%"
 
 .. note::
 
    When the preferred provider is assumed by default, the :term:`PREFERRED_PROVIDER`
    statement does not appear in the ``"bsp_root_name".conf`` file.
 
-You would use the ``linux-yocto_4.4.bbappend`` file to append specific
+You would use the ``linux-yocto_6.12.bbappend`` file to append specific
 BSP settings to the kernel, thus configuring the kernel for your
 particular BSP.
 
@@ -698,14 +697,19 @@ in the Yocto Project Linux Kernel Development Manual.
 
 An alternate scenario is when you create your own kernel recipe for the
 BSP. A good example of this is the Raspberry Pi BSP. If you examine the
-``recipes-kernel/linux`` directory you see the following::
+``recipes-kernel/linux`` directory in that layer you see the following
+Raspberry Pi-specific recipes and associated files::
 
+   files/
+   linux-raspberrypi_6.12.bb
+   linux-raspberrypi_6.1.bb
+   linux-raspberrypi_6.6.bb
    linux-raspberrypi-dev.bb
    linux-raspberrypi.inc
-   linux-raspberrypi_4.14.bb
-   linux-raspberrypi_4.9.bb
-
-The directory contains three kernel recipes and a common include file.
+   linux-raspberrypi-v7_6.12.bb
+   linux-raspberrypi-v7_6.1.bb
+   linux-raspberrypi-v7_6.6.bb
+   linux-raspberrypi-v7.inc
 
 Developing a Board Support Package (BSP)
 ========================================
@@ -1162,7 +1166,7 @@ Use these steps to create a BSP layer:
    :yocto_git:`Source Repositories <>`. To get examples of what you need
    in your configuration file, locate a layer (e.g. "meta-ti") and
    examine the
-   :yocto_git:`local.conf </meta-ti/tree/meta-ti-bsp/conf/layer.conf>`
+   :yocto_git:`layer.conf </meta-ti/tree/meta-ti-bsp/conf/layer.conf>`
    file.
 
 -  *Create a Machine Configuration File:* Create a
@@ -1177,7 +1181,7 @@ Use these steps to create a BSP layer:
 
 -  *Create a Kernel Recipe:* Create a kernel recipe in
    ``recipes-kernel/linux`` by either using a kernel append file or a
-   new custom kernel recipe file (e.g. ``linux-yocto_4.12.bb``). The BSP
+   new custom kernel recipe file (e.g. ``linux-yocto_6.12.bb``). The BSP
    layers mentioned in the previous step also contain different kernel
    examples. See the ":ref:`kernel-dev/common:modifying an existing recipe`"
    section in the Yocto Project Linux Kernel Development Manual for
@@ -1242,7 +1246,7 @@ located in :yocto_git:`poky/meta-yocto-bsp/conf/machine/beaglebone-yocto.conf
 
    PREFERRED_PROVIDER_virtual/xserver ?= "xserver-xorg"
 
-   MACHINE_EXTRA_RRECOMMENDS = "kernel-modules kernel-devicetree"
+   MACHINE_EXTRA_RRECOMMENDS = "kernel-modules"
 
    EXTRA_IMAGEDEPENDS += "virtual/bootloader"
 
@@ -1258,23 +1262,21 @@ located in :yocto_git:`poky/meta-yocto-bsp/conf/machine/beaglebone-yocto.conf
    SERIAL_CONSOLES ?= "115200;ttyS0 115200;ttyO0 115200;ttyAMA0"
 
    PREFERRED_PROVIDER_virtual/kernel ?= "linux-yocto"
-   PREFERRED_VERSION_linux-yocto ?= "6.1%"
+   PREFERRED_VERSION_linux-yocto ?= "6.12%"
 
    KERNEL_IMAGETYPE = "zImage"
-   KERNEL_DEVICETREE = "am335x-bone.dtb am335x-boneblack.dtb am335x-bonegreen.dtb"
-   KERNEL_EXTRA_ARGS += "LOADADDR=${UBOOT_ENTRYPOINT}"
+   DTB_FILES = "am335x-bone.dtb am335x-boneblack.dtb am335x-bonegreen.dtb"
+   KERNEL_DEVICETREE = '${@' '.join('ti/omap/%s' % d for d in '${DTB_FILES}'.split())}'
 
    PREFERRED_PROVIDER_virtual/bootloader ?= "u-boot"
 
    SPL_BINARY = "MLO"
    UBOOT_SUFFIX = "img"
    UBOOT_MACHINE = "am335x_evm_defconfig"
-   UBOOT_ENTRYPOINT = "0x80008000"
-   UBOOT_LOADADDRESS = "0x80008000"
 
    MACHINE_FEATURES = "usbgadget usbhost vfat alsa"
 
-   IMAGE_BOOT_FILES ?= "u-boot.${UBOOT_SUFFIX} ${SPL_BINARY} ${KERNEL_IMAGETYPE} ${KERNEL_DEVICETREE}"
+   IMAGE_BOOT_FILES ?= "u-boot.${UBOOT_SUFFIX} ${SPL_BINARY} ${KERNEL_IMAGETYPE} ${DTB_FILES}"
 
    # support runqemu
    EXTRA_IMAGEDEPENDS += "qemu-native qemu-helper-native"
@@ -1299,7 +1301,7 @@ to build, and U-Boot configurations.
 
 The following list provides some explanation for the statements found in
 the example reference machine configuration file for the BeagleBone
-development boards. Realize that much more can be defined as part of a
+development board. Realize that much more can be defined as part of a
 machine's configuration file. In general, you can learn about related
 variables that this example does not have by locating the variables in
 the ":ref:`ref-manual/variables:variables glossary`" in the Yocto
@@ -1328,12 +1330,12 @@ Project Reference Manual.
    needed in the root filesystem. In this case, the U-Boot recipe must
    be built for the image.
 
-   At the end of the file, we also use this setings to implement
+   At the end of the file, we also use this setting to implement
    ``runqemu`` support on the host machine.
 
 -  :term:`DEFAULTTUNE`: Machines
    use tunings to optimize machine, CPU, and application performance.
-   These features, which are collectively known as "tuning features",
+   These features --- collectively known as "tuning features" ---
    are set in the :term:`OpenEmbedded-Core (OE-Core)` layer. In this
    example, the default tuning file is :oe_git:`tune-cortexa8
    </openembedded-core/tree/meta/conf/machine/include/arm/armv7a/tune-cortexa8.inc>`.
@@ -1363,8 +1365,7 @@ Project Reference Manual.
    to create the sysroot when building a Wic image.
 
 -  :term:`SERIAL_CONSOLES`:
-   Defines a serial console (TTY) to enable using getty. In this case,
-   the baud rate is "115200" and the device name is "ttyO0".
+   Defines one or more serial consoles (TTYs) to enable using getty.
 
 -  :term:`PREFERRED_PROVIDER_virtual/kernel <PREFERRED_PROVIDER>`:
    Specifies the recipe that provides "virtual/kernel" when more than
@@ -1374,7 +1375,7 @@ Project Reference Manual.
 
 -  :term:`PREFERRED_VERSION_linux-yocto <PREFERRED_VERSION>`:
    Defines the version of the recipe used to build the kernel, which is
-   "6.1" in this case.
+   "6.18%" in this case.
 
 -  :term:`KERNEL_IMAGETYPE`:
    The type of kernel to build for the device. In this case, the
@@ -1416,12 +1417,6 @@ Project Reference Manual.
       Specifies the value passed on the make command line when building
       a U-Boot image.
 
-   -  :term:`UBOOT_ENTRYPOINT`:
-      Specifies the entry point for the U-Boot image.
-
-   -  :term:`UBOOT_LOADADDRESS`:
-      Specifies the load address for the U-Boot image.
-
 -  :term:`MACHINE_FEATURES`:
    Specifies the list of hardware features the BeagleBone device is
    capable of supporting. In this case, the device supports "usbgadget
@@ -1439,35 +1434,27 @@ The kernel recipe used to build the kernel image for the BeagleBone
 device was established in the machine configuration::
 
    PREFERRED_PROVIDER_virtual/kernel ?= "linux-yocto"
-   PREFERRED_VERSION_linux-yocto ?= "6.1%"
+   PREFERRED_VERSION_linux-yocto ?= "6.18%"
 
 The ``meta-yocto-bsp/recipes-kernel/linux`` directory in the layer contains
 metadata used to build the kernel. In this case, a kernel append file
-(i.e. ``linux-yocto_6.1.bbappend``) is used to override an established
-kernel recipe (i.e. ``linux-yocto_6.1.bb``), which is located in
-:yocto_git:`/poky/tree/meta/recipes-kernel/linux`.
+(i.e. ``linux-yocto_6.18.bbappend``) is used to override an established
+kernel recipe (i.e. ``linux-yocto_6.18.bb``), which is located in
+:oe_git:`/openembedded-core/tree/meta/recipes-kernel/linux`.
 
 The contents of the append file are::
 
-   KBRANCH:genericx86  = "v6.1/standard/base"
-   KBRANCH:genericx86-64  = "v6.1/standard/base"
-   KBRANCH:beaglebone-yocto = "v6.1/standard/beaglebone"
-
-   KMACHINE:genericx86 ?= "common-pc"
-   KMACHINE:genericx86-64 ?= "common-pc-64"
-   KMACHINE:beaglebone-yocto ?= "beaglebone"
-
-   SRCREV_machine:genericx86 ?= "6ec439b4b456ce929c4c07fe457b5d6a4b468e86"
-   SRCREV_machine:genericx86-64 ?= "6ec439b4b456ce929c4c07fe457b5d6a4b468e86"
-   SRCREV_machine:beaglebone-yocto ?= "423e1996694b61fbfc8ec3bf062fc6461d64fde1"
-
+   COMPATIBLE_MACHINE:genericarm64 = "genericarm64"
+   COMPATIBLE_MACHINE:beaglebone-yocto = "beaglebone-yocto"
    COMPATIBLE_MACHINE:genericx86 = "genericx86"
    COMPATIBLE_MACHINE:genericx86-64 = "genericx86-64"
-   COMPATIBLE_MACHINE:beaglebone-yocto = "beaglebone-yocto"
 
-   LINUX_VERSION:genericx86 = "6.1.30"
-   LINUX_VERSION:genericx86-64 = "6.1.30"
-   LINUX_VERSION:beaglebone-yocto = "6.1.20"
+   KMACHINE:beaglebone-yocto ?= "beaglebone"
+   KMACHINE:genericx86 ?= "common-pc"
+   KMACHINE:genericx86-64 ?= "common-pc-64"
+
+   KBRANCH:genericarm64 ?= "v6.18/standard/genericarm64"
+   SRCREV_machine:genericarm64 ?= "5cd75b0b5da06045acdd0c66e50656ab82cb880f"
 
 This particular append file works for all the machines that are
 part of the ``meta-yocto-bsp`` layer. The relevant statements are

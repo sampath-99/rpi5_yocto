@@ -24,22 +24,25 @@ users can read in standardized format.
 :term:`SBOM` information is also critical to performing vulnerability exposure
 assessments, as all the components used in the Software Supply Chain are listed.
 
-The OpenEmbedded build system doesn't generate such information by default.
-To make this happen, you must inherit the
-:ref:`ref-classes-create-spdx` class from a configuration file::
+The OpenEmbedded build system generates such information by default (by
+inheriting the :ref:`ref-classes-create-spdx` class in :term:`INHERIT_DISTRO`).
 
-   INHERIT += "create-spdx"
+If needed, it can be disabled from a :term:`configuration file`::
 
-Upon building an image, you will then get:
+   INHERIT_DISTRO:remove = "create-spdx"
 
--  :term:`SPDX` output in JSON format as an ``IMAGE-MACHINE.spdx.json`` file in
-   ``tmp/deploy/images/MACHINE/`` inside the :term:`Build Directory`.
+SPDX version 3 support is available on Yocto &DISTRO_NAME;, but disabled by
+default. To enable it, add the following statements from a :term:`configuration
+file`::
 
--  This toplevel file is accompanied by an ``IMAGE-MACHINE.spdx.index.json``
-   containing an index of JSON :term:`SPDX` files for individual recipes.
+   INHERIT_DISTRO:remove = "create-spdx"
+   INHERIT_DISTRO:append = " create-spdx-3.0"
 
--  The compressed archive ``IMAGE-MACHINE.spdx.tar.zst`` contains the index
-   and the files for the single recipes.
+The following documentation will make the assumption that SPDX3 is used.
+
+Upon building an image, you will then get the compressed archive
+``IMAGE-MACHINE.spdx.json`` file in ``tmp/deploy/images/MACHINE/`` inside
+the :term:`Build Directory`.
 
 The :ref:`ref-classes-create-spdx` class offers options to include
 more information in the output :term:`SPDX` data:
@@ -56,19 +59,7 @@ more information in the output :term:`SPDX` data:
 
 Though the toplevel :term:`SPDX` output is available in
 ``tmp/deploy/images/MACHINE/`` inside the :term:`Build Directory`, ancillary
-generated files are available in ``tmp/deploy/spdx/MACHINE`` too, such as:
-
--  The individual :term:`SPDX` JSON files in the ``IMAGE-MACHINE.spdx.tar.zst``
-   archive.
-
--  Compressed archives of the files in the generated target packages,
-   in ``packages/packagename.tar.zst`` (when :term:`SPDX_ARCHIVE_PACKAGED`
-   is set).
-
--  Compressed archives of the source files used to build the host tools
-   and the target packages in ``recipes/recipe-packagename.tar.zst``
-   (when :term:`SPDX_ARCHIVE_SOURCES` is set). Those are needed to fulfill
-   "source code access" license requirements.
+generated files are available in ``tmp/deploy/spdx`` too.
 
 See also the :term:`SPDX_CUSTOM_ANNOTATION_VARS` variable which allows
 to associate custom notes to a recipe.

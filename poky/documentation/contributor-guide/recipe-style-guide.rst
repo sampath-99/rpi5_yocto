@@ -28,7 +28,7 @@ file name. It is recommended to use released versions of software as these are
 revisions that upstream are expecting people to use.
 
 Recipe versions should always compare and sort correctly so that upgrades work
-as expected. With conventional versions such as ``1.4`` upgrading ``to 1.5``
+as expected. With conventional versions such as ``1.4`` upgrading to ``1.5``
 this happens naturally, but some versions don't sort. For example,
 ``1.5 Release Candidate 2`` could be written as ``1.5rc2`` but this sorts after
 ``1.5``, so upgrades from feeds won't happen correctly.
@@ -47,10 +47,10 @@ Debian policy closely.
 
 When a recipe references a git revision that does not correspond to a released
 version of software (e.g. is not a tagged version), the :term:`PV` variable
-should include the Git revision using the following to make the
-version clear::
+should include the sign ``+``, so :term:`bitbake` automatically includes package
+version information during the packaging phase::
 
-    PV = "<version>+git${SRCPV}"
+    PV = "<version>+git"
 
 In this case, ``<version>`` should be the most recently released version of the
 software from the current source revision (``git describe`` can be useful for
@@ -82,7 +82,7 @@ Recipe formatting
 Variable Formatting
 -------------------
 
--  Variable assignment should a space around each side of the operator, e.g.
+-  Variable assignment should include a space around each side of the operator, e.g.
    ``FOO = "bar"``, not ``FOO="bar"``.
 
 -  Double quotes should be used on the right-hand side of the assignment,
@@ -221,6 +221,20 @@ Recipes need to define both the :term:`LICENSE` and
    ``meta/files/common-licenses/`` or the :term:`SPDXLICENSEMAP` flag names
    defined in ``meta/conf/licenses.conf``.
 
+   .. note::
+
+      Setting a :term:`LICENSE` in a recipe applies to the software to be built
+      by this recipe, not to the recipe file itself. The license of recipes,
+      configuration files and scripts should also be clearly specified, for
+      example via comments or via a license found in the :term:`layer` that
+      holds these files. These license files are usually found at the root of
+      the layer. Exceptions should be clearly stated in the layer README or
+      LICENSE file.
+
+      For example, the :term:`OpenEmbedded-Core (OE-Core)` layer provides both
+      the GPL-2.0-only and MIT license files, and a "LICENSE" file to explain
+      how these two licenses are attributed to files found in the layer.
+
 -  :term:`LIC_FILES_CHKSUM`: The OpenEmbedded build system uses this
    variable to make sure the license text has not changed. If it has,
    the build produces an error and it affords you the chance to figure
@@ -254,13 +268,18 @@ License Updates
 ~~~~~~~~~~~~~~~
 
 When you change the :term:`LICENSE` or :term:`LIC_FILES_CHKSUM` in the recipe
-you need to briefly explain the reason for the change via a ``License-Update:``
-tag.  Often it's quite trivial, such as::
+due to upstream making modifications to the license files, you need to briefly
+explain the reason for the change via a ``License-Update:`` tag. Often it's
+quite trivial, such as::
 
     License-Update: copyright years refreshed
 
 Less often, the actual licensing terms themselves will have changed.  If so, do
 try to link to upstream making/justifying that decision.
+
+The ``License-Update:`` tag is not needed for commits which fix incorrect
+license data in our metadata (for an example see OE-Core commit
+:oecore_rev:`6c8b76d240d2457578a58787121bc5873d724ee2`).
 
 Tips and Guidelines for Writing Recipes
 ---------------------------------------
@@ -279,7 +298,7 @@ Tips and Guidelines for Writing Recipes
    - then, copy ``X.orig`` back to ``X``,
    - and, finally, modify ``X``.
 
-   This ensures if rerun the task always has the same end result and the
+   This ensures that rerunning the task always produces the same end result and the
    original file can be preserved to reuse. It also guards against an
    interrupted build corrupting the file.
 
@@ -301,7 +320,7 @@ following status strings:
    No determination has been made yet, or patch has not yet been submitted to
    upstream.
 
-   Keep in mind that every patch submitted upstream reduces the maintainance
+   Keep in mind that every patch submitted upstream reduces the maintenance
    burden in OpenEmbedded and Yocto Project in the long run, so this patch
    status should only be used in exceptional cases if there are genuine
    obstacles to submitting a patch upstream; the reason for that should be
@@ -332,7 +351,7 @@ following status strings:
    The patch is not appropriate for upstream, include a brief reason on the
    same line enclosed with ``[]``. In the past, there were several different
    reasons not to submit patches upstream, but we have to consider that every
-   non-upstreamed patch means a maintainance burden for recipe maintainers.
+   non-upstreamed patch means a maintenance burden for recipe maintainers.
    Currently, the only reasons to mark patches as inappropriate for upstream
    submission are:
 
@@ -389,13 +408,13 @@ CVE patches
 ===========
 
 In order to have a better control of vulnerabilities, patches that fix CVEs must
-contain a ``CVE:`` tag. This tag list all CVEs fixed by the patch. If more than
+contain a ``CVE:`` tag. This tag should list all CVEs fixed by the patch. If more than
 one CVE is fixed, separate them using spaces.
 
 CVE Examples
 ------------
 
-This should be the header of patch that fixes :cve:`2015-8370` in GRUB2::
+This should be the header of patch that fixes :cve_nist:`2015-8370` in GRUB2::
 
    grub2: Fix CVE-2015-8370
 

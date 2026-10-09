@@ -7,12 +7,16 @@ SRC_URI[sha256sum] = "341595a488e3e01a85a9d8911d8912fd922ede5fecc4dce437eb4b6c8d
 
 PYPI_PACKAGE = "xmltodict"
 
+CVE_PRODUCT = "xmltodict:xmltodict"
+
 BBCLASSEXTEND = "native nativesdk"
 
 inherit pypi setuptools3 ptest
 
 SRC_URI += " \
 	file://run-ptest \
+	file://CVE-2025-9375-1.patch \
+	file://CVE-2025-9375-2.patch \
 "
 
 RDEPENDS:${PN} += " \

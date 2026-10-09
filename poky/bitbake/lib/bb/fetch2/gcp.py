@@ -23,7 +23,6 @@ import urllib.parse, urllib.error
 from bb.fetch2 import FetchMethod
 from bb.fetch2 import FetchError
 from bb.fetch2 import logger
-from bb.fetch2 import runfetchcmd
 
 class GCP(FetchMethod):
     """
@@ -48,7 +47,6 @@ class GCP(FetchMethod):
             ud.basename = os.path.basename(ud.path)
 
         ud.localfile = d.expand(urllib.parse.unquote(ud.basename))
-        ud.basecmd = "gsutil stat"
 
     def get_gcp_client(self):
         from google.cloud import storage
@@ -59,17 +57,27 @@ class GCP(FetchMethod):
         Fetch urls using the GCP API.
         Assumes localpath was called first.
         """
+        from google.api_core.exceptions import GatewayTimeout, NotFound
         logger.debug2(f"Trying to download gs://{ud.host}{ud.path} to {ud.localpath}")
         if self.gcp_client is None:
             self.get_gcp_client()
 
-        bb.fetch2.check_network_access(d, ud.basecmd, f"gs://{ud.host}{ud.path}")
-        runfetchcmd("%s %s" % (ud.basecmd, f"gs://{ud.host}{ud.path}"), d)
+        bb.fetch2.check_network_access(d, "blob.download_to_filename", f"gs://{ud.host}{ud.path}")
 
         # Path sometimes has leading slash, so strip it
         path = ud.path.lstrip("/")
         blob = self.gcp_client.bucket(ud.host).blob(path)
-        blob.download_to_filename(ud.localpath)
+        try:
+            blob.download_to_filename(ud.localpath)
+        except NotFound:
+            raise FetchError("The GCP API threw a NotFound exception")
+        except GatewayTimeout as e:
+            # The GCS client already retries GatewayTimeout internally.
+            # Raise FetchError so mirror fallback can proceed.
+            logger.warning(
+                f"GCP API GatewayTimeout while downloading gs://{ud.host}{ud.path}: {e}"
+            )
+            raise FetchError(f"Transient GCP API GatewayTimeout for gs://{ud.host}{ud.path}")
 
         # Additional sanity checks copied from the wget class (although there
         # are no known issues which mean these are required, treat the GCP API
@@ -87,16 +95,28 @@ class GCP(FetchMethod):
         """
         Check the status of a URL.
         """
+        from google.api_core.exceptions import GatewayTimeout
+
         logger.debug2(f"Checking status of gs://{ud.host}{ud.path}")
         if self.gcp_client is None:
             self.get_gcp_client()
 
-        bb.fetch2.check_network_access(d, ud.basecmd, f"gs://{ud.host}{ud.path}")
-        runfetchcmd("%s %s" % (ud.basecmd, f"gs://{ud.host}{ud.path}"), d)
+        bb.fetch2.check_network_access(d, "gcp_client.bucket(ud.host).blob(path).exists()", f"gs://{ud.host}{ud.path}")
 
         # Path sometimes has leading slash, so strip it
         path = ud.path.lstrip("/")
-        if self.gcp_client.bucket(ud.host).blob(path).exists() == False:
+        try:
+            exists = self.gcp_client.bucket(ud.host).blob(path).exists()
+        except GatewayTimeout as e:
+            # The GCS client already retries GatewayTimeout internally.
+            # Surface a normal checkstatus failure and warn so the timeout
+            # is visible to operators.
+            logger.warning(
+                f"GCP API GatewayTimeout while checking gs://{ud.host}{ud.path}; treating as unavailable: {e}"
+            )
+            raise FetchError(f"Transient GCP API GatewayTimeout for gs://{ud.host}{ud.path}")
+
+        if exists == False:
             raise FetchError(f"The GCP API reported that gs://{ud.host}{ud.path} does not exist")
         else:
             return True

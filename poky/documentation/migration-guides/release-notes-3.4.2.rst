@@ -6,29 +6,29 @@ Release notes for 3.4.2 (honister)
 Security Fixes in 3.4.2
 ~~~~~~~~~~~~~~~~~~~~~~~
 
--  tiff: backport fix for :cve:`2022-22844`
--  glibc : Fix :cve:`2021-3999`
--  glibc : Fix :cve:`2021-3998`
--  glibc : Fix :cve:`2022-23219`
--  glibc : Fix :cve:`2022-23218`
--  lighttpd: backport a fix for :cve:`2022-22707`
--  speex: fix :cve:`2020-23903`
--  linux-yocto/5.10: amdgpu: updates for :cve:`2021-42327`
--  libsndfile1: fix :cve:`2021-4156`
+-  tiff: backport fix for :cve_nist:`2022-22844`
+-  glibc : Fix :cve_nist:`2021-3999`
+-  glibc : Fix :cve_nist:`2021-3998`
+-  glibc : Fix :cve_nist:`2022-23219`
+-  glibc : Fix :cve_nist:`2022-23218`
+-  lighttpd: backport a fix for :cve_nist:`2022-22707`
+-  speex: fix :cve_nist:`2020-23903`
+-  linux-yocto/5.10: amdgpu: updates for :cve_nist:`2021-42327`
+-  libsndfile1: fix :cve_nist:`2021-4156`
 -  xserver-xorg: whitelist two CVEs
--  grub2: fix :cve:`2021-3981`
+-  grub2: fix :cve_nist:`2021-3981`
 -  xserver-xorg: update :term:`CVE_PRODUCT`
--  binutils: :cve:`2021-42574`
--  gcc: Fix :cve:`2021-42574`
--  gcc: Fix :cve:`2021-35465`
+-  binutils: :cve_nist:`2021-42574`
+-  gcc: Fix :cve_nist:`2021-42574`
+-  gcc: Fix :cve_nist:`2021-35465`
 -  cve-extra-exclusions: add db CVEs to exclusion list
--  gcc: Add :cve:`2021-37322` to the list of CVEs to ignore
--  bind: fix :cve:`2021-25219`
--  openssh: fix :cve:`2021-41617`
--  ncurses: fix :cve:`2021-39537`
--  vim: fix :cve:`2021-3968` and :cve:`2021-3973`
--  vim: fix :cve:`2021-3927` and :cve:`2021-3928`
--  gmp: fix :cve:`2021-43618`
+-  gcc: Add :cve_nist:`2021-37322` to the list of CVEs to ignore
+-  bind: fix :cve_nist:`2021-25219`
+-  openssh: fix :cve_nist:`2021-41617`
+-  ncurses: fix :cve_nist:`2021-39537`
+-  vim: fix :cve_nist:`2021-3968` and :cve_nist:`2021-3973`
+-  vim: fix :cve_nist:`2021-3927` and :cve_nist:`2021-3928`
+-  gmp: fix :cve_nist:`2021-43618`
 
 Fixes in 3.4.2
 ~~~~~~~~~~~~~~
@@ -200,7 +200,7 @@ openembedded-core
 
 meta-mingw
 
--  Repository Location: :yocto_git:`meta-mingw`
+-  Repository Location: :yocto_git:`/meta-mingw`
 -  Branch: :yocto_git:`honister </meta-mingw/log/?h=honister>`
 -  Tag: :yocto_git:`yocto-3.4.2 </meta-mingw/tag/?h=yocto-3.4.2>`
 -  Git Revision: :yocto_git:`f5d761cbd5c957e4405c5d40b0c236d263c916a8 </meta-mingw/commit/?id=f5d761cbd5c957e4405c5d40b0c236d263c916a8>`
@@ -239,4 +239,4 @@ yocto-docs
 -  Repository Location: :yocto_git:`/yocto-docs`
 -  Branch: :yocto_git:`honister </yocto-docs/log/?h=honister>`
 -  Tag: :yocto_git:`yocto-3.4.2 </yocto-docs/tag/?h=yocto-3.4.2>`
--  Git Revision: :yocto_git:`3061d3d62054a5c3b9e16bfce4bcd186fa7a23d2` </yocto-docs/commit/?3061d3d62054a5c3b9e16bfce4bcd186fa7a23d2>`
+-  Git Revision: :yocto_git:`3061d3d62054a5c3b9e16bfce4bcd186fa7a23d2 </yocto-docs/commit/?3061d3d62054a5c3b9e16bfce4bcd186fa7a23d2>`

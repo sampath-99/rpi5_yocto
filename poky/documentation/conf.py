@@ -13,6 +13,7 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
 import os
+import re
 import sys
 import datetime
 try:
@@ -88,27 +89,46 @@ rst_prolog = """
 .. |author| replace:: %s
 """ % (project, copyright, author)
 
+# base url definitions
+oe_git_server = "https://git.openembedded.org"
+oecore_git = f"{oe_git_server}/openembedded-core"
+bitbake_git = f"{oe_git_server}/bitbake"
+yocto_git_server = "https://git.yoctoproject.org"
+meta_yocto_git = f"{yocto_git_server}/meta-yocto"
+bugzilla_server = "https://bugzilla.yoctoproject.org"
+
 # external links and substitutions
 extlinks = {
-    'cve': ('https://nvd.nist.gov/vuln/detail/CVE-%s', 'CVE-%s'),
+    'bitbake_git': (f'{bitbake_git}%s', None),
+    'bitbake_path': (f'{bitbake_git}/tree/%s', '%s'),
+    'bitbake_rev': (f'{bitbake_git}/commit/?id=%s', '%.7s'),
     'cve_mitre': ('https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-%s', 'CVE-%s'),
+    'cve_nist': ('https://nvd.nist.gov/vuln/detail/CVE-%s', 'CVE-%s'),
     'yocto_home': ('https://www.yoctoproject.org%s', None),
     'yocto_wiki': ('https://wiki.yoctoproject.org/wiki%s', None),
     'yocto_dl': ('https://downloads.yoctoproject.org%s', None),
     'yocto_lists': ('https://lists.yoctoproject.org%s', None),
-    'yocto_bugs': ('https://bugzilla.yoctoproject.org%s', None),
+    'yocto_bugs': (f'{bugzilla_server}%s', None),
+    'yocto_bug': (f'{bugzilla_server}/show_bug.cgi?id=%s', '%s'),
     'yocto_ab': ('https://autobuilder.yoctoproject.org%s', None),
     'yocto_docs': ('https://docs.yoctoproject.org%s', None),
-    'yocto_git': ('https://git.yoctoproject.org%s', None),
+    'yocto_git': (f'{yocto_git_server}%s', None),
+    'meta_yocto_path': (f'{meta_yocto_git}/tree/%s', '%s'),
+    'meta_yocto_rev': (f'{meta_yocto_git}/commit/?id=%s', '%.7s'),
     'yocto_sstate': ('http://sstate.yoctoproject.org%s', None),
     'oe_home': ('https://www.openembedded.org%s', None),
     'oe_lists': ('https://lists.openembedded.org%s', None),
-    'oe_git': ('https://git.openembedded.org%s', None),
+    'oe_git': (f'{oe_git_server}%s', None),
+    'oecore_path': (f'{oecore_git}/tree/%s', '%s'),
+    'oecore_rev': (f'{oecore_git}/commit/?id=%s', '%.7s'),
     'oe_wiki': ('https://www.openembedded.org/wiki%s', None),
     'oe_layerindex': ('https://layers.openembedded.org%s', None),
     'oe_layer': ('https://layers.openembedded.org/layerindex/branch/master/layer%s', None),
     'wikipedia': ('https://en.wikipedia.org/wiki/%s', None),
 }
+
+# To be able to use :manpage:`<something>` in the docs.
+manpages_url = 'https://manpages.debian.org/{path}'
 
 # Intersphinx config to use cross reference with BitBake user manual
 intersphinx_mapping = {
@@ -135,6 +155,7 @@ except ImportError:
     sys.exit(1)
 
 html_logo = 'sphinx-static/YoctoProject_Logo_RGB.jpg'
+html_favicon = 'sphinx-static/favicon.ico'
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -158,10 +179,33 @@ html_last_updated_fmt = '%b %d, %Y'
 # Remove the trailing 'dot' in section numbers
 html_secnumber_suffix = " "
 
+# We need XeTeX to process special unicode character, sometimes the contributor
+# list from the release note contains those.
+# See https://docs.readthedocs.io/en/stable/guides/pdf-non-ascii-languages.html.
+latex_engine = 'xelatex'
+latex_use_xindy = False
 latex_elements = {
     'passoptionstopackages': '\\PassOptionsToPackage{bookmarksdepth=5}{hyperref}',
-    'preamble': '\\setcounter{tocdepth}{2}',
+    'preamble': '\\usepackage[UTF8]{ctex}\n\\setcounter{tocdepth}{2}',
 }
+
+
+from sphinx.search import SearchEnglish
+from sphinx.search import languages
+class DashFriendlySearchEnglish(SearchEnglish):
+
+    # Accept words that can include 'inner' hyphens or dots
+    _word_re = re.compile(r'[\w]+(?:[\.\-][\w]+)*')
+
+    js_splitter_code = r"""
+function splitQuery(query) {
+    return query
+        .split(/[^\p{Letter}\p{Number}_\p{Emoji_Presentation}\-\.]+/gu)
+        .filter(term => term.length > 0);
+}
+"""
+
+languages['en'] = DashFriendlySearchEnglish
 
 # Make the EPUB builder prefer PNG to SVG because of issues rendering Inkscape SVG
 from sphinx.builders.epub3 import Epub3Builder

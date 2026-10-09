@@ -123,10 +123,9 @@ Follow these general steps to create your layer without using tools:
       Lists all layers on which this layer depends (if any).
 
    -  :term:`LAYERSERIES_COMPAT`:
-      Lists the :yocto_wiki:`Yocto Project </Releases>`
-      releases for which the current version is compatible. This
-      variable is a good way to indicate if your particular layer is
-      current.
+      Lists the :yocto_home:`Yocto Project releases </development/releases/>`
+      for which the current version is compatible. This variable is a good
+      way to indicate if your particular layer is current.
 
 
    .. note::
@@ -551,7 +550,7 @@ important as it ensures that items in the list remain colon-separated.
    append file would not even use the :term:`FILESEXTRAPATHS` statement.
 
 The end result of this ``.bbappend`` file is that on a Raspberry Pi, where
-``rpi`` will exist in the list of :term:`OVERRIDES`, the file
+``rpi`` will exist in the list of :term:`FILESOVERRIDES`, the file
 ``meta-raspberrypi/recipes-bsp/formfactor/formfactor/rpi/machconfig`` will be
 used during :ref:`ref-tasks-fetch` and the test for a non-zero file size in
 :ref:`ref-tasks-install` will return true, and the file will be installed.
@@ -612,7 +611,7 @@ file is in the layer at ``recipes-graphics/xorg-xserver``::
 Building off of the previous example, we once again are setting the
 :term:`FILESEXTRAPATHS` variable.  In this case we are also using
 :term:`SRC_URI` to list additional source files to use when ``rpi`` is found in
-the list of :term:`OVERRIDES`.  The :ref:`ref-tasks-install` task will then perform a
+the list of :term:`FILESOVERRIDES`.  The :ref:`ref-tasks-install` task will then perform a
 check for an additional :term:`MACHINE_FEATURES` that if set will cause these
 additional files to be installed.  These additional files are listed in
 :term:`FILES` so that they will be packaged.
@@ -643,6 +642,96 @@ variable and append the layer's root name::
    Also, the layer priority does not currently affect the precedence
    order of ``.conf`` or ``.bbclass`` files. Future versions of BitBake
    might address this.
+
+Providing Global-level Configurations With Your Layer
+-----------------------------------------------------
+
+When creating a layer, you may need to define configurations that should take
+effect globally in your build environment when the layer is part of the build.
+The ``layer.conf`` file is a :term:`configuration file` that affects the build
+system globally, so it is a candidate for this use-case.
+
+.. warning::
+
+   Providing unconditional global level configuration from the ``layer.conf``
+   file is *not* a good practice, and should be avoided. For this reason, the
+   section :ref:`ref-conditional-layer-confs` below shows how the ``layer.conf``
+   file can be used to provide configurations only if a certain condition is
+   met.
+
+For example, if your layer provides a Linux kernel recipe named
+``linux-custom``, you may want to make :term:`PREFERRED_PROVIDER_virtual/kernel
+<PREFERRED_PROVIDER>` point to ``linux-custom``::
+
+   PREFERRED_PROVIDER_virtual/kernel = "linux-custom"
+
+This can be defined in the ``layer.conf`` file. If your layer is at the last
+position in the :term:`BBLAYERS` list, it will take precedence over previous
+``PREFERRED_PROVIDER_virtual/kernel`` assignments (unless one is set from a
+:term:`configuration file` that is parsed later, such as machine or distro
+configuration files).
+
+.. _ref-conditional-layer-confs:
+
+Conditionally Provide Global-level Configurations With Your Layer
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+In some cases, your layer may provide global configurations only if some
+features it provides are enabled. Since the ``layer.conf`` file is parsed at an
+earlier stage in the parsing process, the :term:`DISTRO_FEATURES` and
+:term:`MACHINE_FEATURES` variables are not yet available to ``layer.conf``, and
+declaring conditional assignments based on these variables is not possible. The
+following technique shows a way to bypass this limitation by using the
+:term:`USER_CLASSES` variable and a conditional ``require`` command.
+
+In the following steps, let's assume our layer is named ``meta-mylayer`` and
+that this layer defines a custom :ref:`distro feature <ref-features-distro>`
+named ``mylayer-kernel``. We will set the :term:`PREFERRED_PROVIDER` variable
+for the kernel only if our feature ``mylayer-kernel`` is part of the
+:term:`DISTRO_FEATURES`:
+
+#. Create an include file in the directory
+   ``meta-mylayer/conf/distro/include/``, for example a file named
+   ``mylayer-kernel-provider.inc`` that sets the kernel provider to
+   ``linux-custom``::
+
+      PREFERRED_PROVIDER_virtual/kernel = "linux-custom"
+
+#. Provide a path to this include file in your ``layer.conf``::
+
+      META_MYLAYER_KERNEL_PROVIDER_PATH = "${LAYERDIR}/conf/distro/include/mylayer-kernel-provider.inc"
+
+#. Create a new class in ``meta-mylayer/classes-global/``, for example a class
+   ``meta-mylayer-cfg.bbclass``. Make it conditionally require the file
+   ``mylayer-kernel-provider.inc`` defined above, using the variable
+   ``META_MYLAYER_KERNEL_PROVIDER_PATH`` defined in ``layer.conf``::
+
+      require ${@bb.utils.contains('DISTRO_FEATURES', 'mylayer-kernel', '${META_MYLAYER_KERNEL_PROVIDER_PATH}', '', d)}
+
+   For details on the ``bb.utils.contains`` function, see its definition in
+   :bitbake_git:`lib/bb/utils.py </tree/lib/bb/utils.py>`.
+
+   .. note::
+
+      The ``require`` command is designed to not fail if the function
+      ``bb.utils.contains`` returns an empty string.
+
+#. Back to your ``layer.conf`` file, add the class ``meta-mylayer-cfg`` class to
+   the :term:`USER_CLASSES` variable::
+
+      USER_CLASSES:append = " meta-mylayer-cfg"
+
+   This will add the class ``meta-mylayer-cfg`` to the list of classes to
+   globally inherit. Since the ``require`` command is conditional in
+   ``meta-mylayer-cfg.bbclass``, even though inherited the class will have no
+   effect unless the feature ``mylayer-kernel`` is enabled through
+   :term:`DISTRO_FEATURES`.
+
+This technique can also be used for :ref:`Machine features
+<ref-features-machine>` by following the same steps. Though not mandatory, it is
+recommended to put include files for :term:`DISTRO_FEATURES` in your layer's
+``conf/distro/include`` and the ones for :term:`MACHINE_FEATURES` in your
+layer's ``conf/machine/include``.
 
 Managing Layers
 ===============
@@ -741,6 +830,8 @@ The following list describes the available commands:
 -  ``create-layers-setup``: Writes out a configuration file and/or a script that
    can replicate the directory structure and revisions of the layers in a current build.
    For more information, see ":ref:`dev-manual/layers:saving and restoring the layers setup`".
+
+-  ``show-machines``: Lists the machines available in the currently configured layers.
 
 Creating a General Layer Using the ``bitbake-layers`` Script
 ============================================================
@@ -894,13 +985,13 @@ above:
 
       Setting up source meta-intel, revision 15.0-hardknott-3.3-310-g0a96edae, branch master
       Running 'git init -q /srv/work/alex/my-build/meta-intel'
-      Running 'git remote remove origin > /dev/null 2>&1; git remote add origin git://git.yoctoproject.org/meta-intel' in /srv/work/alex/my-build/meta-intel
+      Running 'git remote remove origin > /dev/null 2>&1; git remote add origin https://git.yoctoproject.org/meta-intel' in /srv/work/alex/my-build/meta-intel
       Running 'git fetch -q origin || true' in /srv/work/alex/my-build/meta-intel
       Running 'git checkout -q 0a96edae609a3f48befac36af82cf1eed6786b4a' in /srv/work/alex/my-build/meta-intel
 
       Setting up source poky, revision 4.1_M1-372-g55483d28f2, branch akanavin/setup-layers
       Running 'git init -q /srv/work/alex/my-build/poky'
-      Running 'git remote remove origin > /dev/null 2>&1; git remote add origin git://git.yoctoproject.org/poky' in /srv/work/alex/my-build/poky
+      Running 'git remote remove origin > /dev/null 2>&1; git remote add origin https://git.yoctoproject.org/poky' in /srv/work/alex/my-build/poky
       Running 'git fetch -q origin || true' in /srv/work/alex/my-build/poky
       Running 'git remote remove poky-contrib > /dev/null 2>&1; git remote add poky-contrib ssh://git@push.yoctoproject.org/poky-contrib' in /srv/work/alex/my-build/poky
       Running 'git fetch -q poky-contrib || true' in /srv/work/alex/my-build/poky

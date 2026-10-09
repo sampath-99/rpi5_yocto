@@ -11,7 +11,7 @@ and one process tries to chown a file that the other process has just deleted.
 Also install-manx should be a phony target, and for clarity use $^ instead of $?
 in the install command.
 
-Upstream-Status: Pending
+Upstream-Status: Backport [0f022dca90cfe6bbf6a74f605dcaf1b489d58a9b]
 Signed-off-by: Ross Burton <ross.burton@intel.com>
 ---
  Makefile.in | 8 ++++----

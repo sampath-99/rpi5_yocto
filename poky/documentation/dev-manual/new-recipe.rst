@@ -56,7 +56,7 @@ necessary when adding a recipe to build a new piece of software to be
 included in a build.
 
 You can find a complete description of the ``devtool add`` command in
-the ":ref:`sdk-manual/extensible:a closer look at \`\`devtool add\`\``" section
+the ":ref:`sdk-manual/extensible:a closer look at ``devtool add```" section
 in the Yocto Project Application Development and the Extensible Software
 Development Kit (eSDK) manual.
 
@@ -83,19 +83,20 @@ command::
    OpenEmbedded recipe tool
 
    options:
-     -d, --debug     Enable debug output
-     -q, --quiet     Print only errors
-     --color COLOR   Colorize output (where COLOR is auto, always, never)
-     -h, --help      show this help message and exit
+     -d, --debug       Enable debug output
+     -q, --quiet       Print only errors
+     --color COLOR     Colorize output (where COLOR is auto, always, never)
+     -h, --help        show this help message and exit
 
    subcommands:
-     create          Create a new recipe
-     newappend       Create a bbappend for the specified target in the specified
-                       layer
-     setvar          Set a variable within a recipe
-     appendfile      Create/update a bbappend to replace a target file
-     appendsrcfiles  Create/update a bbappend to add or replace source files
-     appendsrcfile   Create/update a bbappend to add or replace a source file
+     newappend         Create a bbappend for the specified target in the specified layer
+     create            Create a new recipe
+     setvar            Set a variable within a recipe
+     appendfile        Create/update a bbappend to replace a target file
+     appendsrcfiles    Create/update a bbappend to add or replace source files
+     appendsrcfile     Create/update a bbappend to add or replace a source file
+     edit              Edit the recipe and appends for the specified target. This obeys $VISUAL if set,
+                       otherwise $EDITOR, otherwise vi.
    Use recipetool <subcommand> --help to get help on a specific command
 
 Running ``recipetool create -o OUTFILE`` creates the base recipe and
@@ -218,9 +219,9 @@ compilation and packaging files, and so forth.
 
 The path to the per-recipe temporary work directory depends on the
 context in which it is being built. The quickest way to find this path
-is to have BitBake return it by running the following::
+is to use the ``bitbake-getvar`` utility::
 
-   $ bitbake -e basename | grep ^WORKDIR=
+   $ bitbake-getvar -r basename WORKDIR
 
 As an example, assume a Source Directory
 top-level folder named ``poky``, a default :term:`Build Directory` at
@@ -291,13 +292,13 @@ another example that specifies these types of files, see the
 
 Another way of specifying source is from an SCM. For Git repositories,
 you must specify :term:`SRCREV` and you should specify :term:`PV` to include
-the revision with :term:`SRCPV`. Here is an example from the recipe
-``meta/recipes-core/musl/gcompat_git.bb``::
+a ``+`` sign in its definition. Here is an example from the recipe
+:oe_git:`meta/recipes-sato/l3afpad/l3afpad_git.bb </openembedded-core/tree/meta/recipes-sato/l3afpad/l3afpad_git.bb>`::
 
-   SRC_URI = "git://git.adelielinux.org/adelie/gcompat.git;protocol=https;branch=current"
+   SRC_URI = "git://github.com/stevenhoneyman/l3afpad.git;branch=master;protocol=https"
 
-   PV = "1.0.0+1.1+git${SRCPV}"
-   SRCREV = "af5a49e489fdc04b9cf02547650d7aeaccd43793"
+   PV = "0.8.18.1.11+git"
+   SRCREV ="3cdccdc9505643e50f8208171d9eee5de11a42ff"
 
 If your :term:`SRC_URI` statement includes URLs pointing to individual files
 fetched from a remote server other than a version control system,
@@ -438,7 +439,7 @@ Licensing
 =========
 
 Your recipe needs to define variables related to the license
-under whith the software is distributed. See the
+under which the software is distributed. See the
 :ref:`contributor-guide/recipe-style-guide:recipe license fields`
 section in the Contributor Guide for details.
 
@@ -824,7 +825,7 @@ different ways:
 -  *systemd:* System Management Daemon (systemd) was designed to replace
    SysVinit and to provide enhanced management of services. For more
    information on systemd, see the systemd homepage at
-   https://freedesktop.org/wiki/Software/systemd/.
+   https://systemd.io/.
 
    To enable a service using systemd, your recipe needs to inherit the
    :ref:`ref-classes-systemd` class. See the ``systemd.bbclass`` file
@@ -975,11 +976,10 @@ kernel recipe you want by using the :term:`PREFERRED_PROVIDER` variable. As
 an example, consider the :yocto_git:`x86-base.inc
 </poky/tree/meta/conf/machine/include/x86/x86-base.inc>` include file, which is a
 machine (i.e. :term:`MACHINE`) configuration file. This include file is the
-reason all x86-based machines use the ``linux-yocto`` kernel. Here are the
-relevant lines from the include file::
+reason all x86-based machines use the ``linux-yocto`` kernel. Here is the
+relevant line from that include file::
 
    PREFERRED_PROVIDER_virtual/kernel ??= "linux-yocto"
-   PREFERRED_VERSION_linux-yocto ??= "4.15%"
 
 When you use a virtual provider, you do not have to "hard code" a recipe
 name as a build dependency. You can use the
@@ -1043,7 +1043,7 @@ correctly trigger an upgrade.
 In order to ensure the versions compare properly, the recommended
 convention is to use a tilde (``~``) character as follows::
 
-  PV = 0.8.16~rc1
+  PV = "0.8.16~rc1"
 
 This way ``0.8.16~rc1`` sorts before ``0.8.16``. See the
 ":ref:`contributor-guide/recipe-style-guide:version policy`" section in the
@@ -1626,7 +1626,7 @@ in the BitBake User Manual.
    You indicate Python code using the ``${@python_code}`` syntax for the
    variable assignment::
 
-      SRC_URI = "ftp://ftp.info-zip.org/pub/infozip/src/zip${@d.getVar('PV',1).replace('.', '')}.tgz
+      SRC_URI = "ftp://ftp.info-zip.org/pub/infozip/src/zip${@d.getVar('PV',1).replace('.', '')}.tgz"
 
 -  *Shell Function Syntax:* Write shell functions as if you were writing
    a shell script when you describe a list of actions to take. You

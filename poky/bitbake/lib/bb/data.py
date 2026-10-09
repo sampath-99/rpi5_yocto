@@ -293,7 +293,7 @@ def build_dependencies(key, keys, mod_funcs, shelldeps, varflagsexcl, ignored_va
         if key in mod_funcs:
             exclusions = set()
             moddep = bb.codeparser.modulecode_deps[key]
-            value = handle_contains("", moddep[3], exclusions, d)
+            value = handle_contains(moddep[4], moddep[3], exclusions, d)
             return frozenset((moddep[0] | keys & moddep[1]) - ignored_vars), value
 
         if key[-1] == ']':
@@ -377,7 +377,7 @@ def generate_dependencies(d, ignored_vars):
     mod_funcs = set(bb.codeparser.modulecode_deps.keys())
     keys = set(key for key in d if not key.startswith("__")) | mod_funcs
     shelldeps = set(key for key in d.getVar("__exportlist", False) if bb.utils.to_boolean(d.getVarFlag(key, "export")) and not bb.utils.to_boolean(d.getVarFlag(key, "unexport")))
-    varflagsexcl = d.getVar('BB_SIGNATURE_EXCLUDE_FLAGS')
+    varflagsexcl = (d.getVar('BB_SIGNATURE_EXCLUDE_FLAGS') or "").split()
 
     codeparserd = d.createCopy()
     for forced in (d.getVar('BB_HASH_CODEPARSER_VALS') or "").split():

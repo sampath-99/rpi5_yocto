@@ -12,7 +12,7 @@ Features provide a mechanism for working out which packages should be
 included in the generated images. Distributions can select which
 features they want to support through the :term:`DISTRO_FEATURES` variable,
 which is set or appended to in a distribution's configuration file such
-as ``poky.conf``, ``poky-tiny.conf``, ``poky-lsb.conf`` and so forth.
+as ``poky.conf``, ``poky-tiny.conf``, ``poky-altcfg.conf`` and so forth.
 Machine features are set in the :term:`MACHINE_FEATURES` variable, which is
 set in the machine configuration file and specifies the hardware
 features for a given machine.
@@ -146,7 +146,7 @@ metadata, as extra layers can define their own:
 
 -  *directfb:* Include DirectFB support.
 
--  *ext2:* Include tools for supporting for devices with internal
+-  *ext2:* Include tools for supporting devices with internal
    HDD/Microdrive for storing files (instead of Flash only devices).
 
 -  *gobject-introspection-data:* Include data to support
@@ -197,14 +197,18 @@ metadata, as extra layers can define their own:
 
 -  *pcmcia:* Include PCMCIA/CompactFlash support.
 
+-  *pni-names:* Enable generation of persistent network interface names, i.e.
+   the system tries hard to have the same but unique names for the network
+   interfaces even after a reinstall.
+
 -  *polkit:* Include :wikipedia:`Polkit <Polkit>` support.
 
 -  *ppp:* Include PPP dialup support.
 
 -  *ptest:* Enables building the package tests where supported by
    individual recipes. For more information on package tests, see the
-   ":ref:`dev-manual/packages:testing packages with ptest`" section
-   in the Yocto Project Development Tasks Manual.
+   ":ref:`test-manual/ptest:testing packages with ptest`" section
+   in the Yocto Project Test Environment Manual.
 
 -  *pulseaudio:* Include support for
    `PulseAudio <https://www.freedesktop.org/wiki/Software/PulseAudio/>`__.
@@ -353,7 +357,7 @@ The image features available for all images are:
    different package name (or names) within the image recipe or at the
    distro configuration level.
 
--  *stateless-rootfs:*: specifies that the image should be created as
+-  *stateless-rootfs:* specifies that the image should be created as
    stateless - when using ``systemd``, ``systemctl-native`` will not
    be run on the image, leaving the image for population at runtime by
    systemd.
@@ -402,6 +406,10 @@ these valid features is as follows:
    ":ref:`dev-manual/debugging:debugging with the gnu project debugger (gdb) remotely`" section
    in the Yocto Project Development Tasks Manual. For information on
    tracing and profiling, see the :doc:`/profile-manual/index`.
+
+-  *tools-profile:*: Installs profiling tools such as ``perf``. See the
+   :ref:`profile-manual/intro:Yocto Project Profiling and Tracing Manual` for more
+   information.
 
 -  *tools-sdk:* Installs a full SDK that runs on the device.
 

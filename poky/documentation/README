@@ -22,7 +22,7 @@ these instances.
                              a local Git repository based on this upstream
                              repository as follows:
 
-                               git clone git://git.yoctoproject.org/yocto-docs
+                               git clone https://git.yoctoproject.org/yocto-docs
 
                              Changes and patches are first pushed to the
                              yocto-docs Git repository.  Later, they make it
@@ -151,6 +151,13 @@ dependencies in a virtual environment:
  $ pipenv install
  $ pipenv run make html
 
+Note: if you decide to use Pipenv for installing the dependencies, don't forget
+to prefix all the make commands below with "pipenv run ". The make commands
+which already start with "pipenv run " don't need to be prefixed a second time
+but require you to use Pipenv for them to run and aren't available when
+following the instructions from
+https://docs.yoctoproject.org/dev/ref-manual/system-requirements.html#required-packages-for-the-build-host.
+
 Style checking the Yocto Project documentation
 ==============================================
 
@@ -159,13 +166,21 @@ to validate the text style.
 
 To install Vale:
 
- $ pip install vale
+ $ pipenv install --dev
 
 To run Vale:
 
- $ make stylecheck
+ $ pipenv run make stylecheck
 
-Link checking the Yocto Project documentation
+Style checking the whole documentation might take some time and generate a
+lot of warnings/errors, thus one can run Vale on a subset of files or
+directories:
+
+  $ pipenv run make stylecheck VALEDOCS=<file>
+  $ pipenv run make stylecheck VALEDOCS="<file1> <file2>"
+  $ pipenv run make stylecheck VALEDOCS=<dir>
+
+Lint checking the Yocto Project documentation
 =============================================
 
 To fix errors which are not reported by Sphinx itself,
@@ -173,11 +188,19 @@ the project uses sphinx-lint (https://github.com/sphinx-contrib/sphinx-lint).
 
 To install sphinx-lint:
 
- $ pip install sphinx-lint
+ $ pipenv install --dev
 
 To run sphinx-lint:
 
- $ make sphinx-lint
+ $ pipenv run make sphinx-lint
+
+Lint checking the whole documentation might take some time and generate a
+lot of warnings/errors, thus one can run sphinx-lint on a subset of files
+or directories:
+
+  $ pipenv run make sphinx-lint SPHINXLINTDOCS=<file>
+  $ pipenv run make sphinx-lint SPHINXLINTDOCS="<file1> <file2>"
+  $ pipenv run make sphinx-lint SPHINXLINTDOCS=<dir>
 
 Sphinx theme and CSS customization
 ==================================
@@ -413,5 +436,22 @@ both the Yocto Project and BitBake manuals:
 Submitting documentation changes
 ================================
 
-Please see the top level README file in this repository for details of where
-to send patches.
+Please refer to our contributor guide here: https://docs.yoctoproject.org/contributor-guide/
+for full details on how to submit changes.
+
+As a quick guide, patches should be sent to docs@lists.yoctoproject.org
+The git command to do that would be:
+
+     git send-email -M -1 --to docs@lists.yoctoproject.org
+
+The 'To' header can be set as default for this repository:
+
+     git config sendemail.to docs@lists.yoctoproject.org
+
+Now you can just do 'git send-email origin/master..' to send all local patches.
+
+Read the other sections in this document and documentation/standards.md for
+rules to follow when contributing to the documentation.
+
+Git repository: https://git.yoctoproject.org/yocto-docs
+Mailing list: docs@lists.yoctoproject.org

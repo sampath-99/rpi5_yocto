@@ -23,6 +23,7 @@ import collections
 import subprocess
 import pickle
 import errno
+import shlex
 import bb.persist_data, bb.utils
 import bb.checksum
 import bb.process
@@ -237,7 +238,7 @@ class URI(object):
         # to RFC compliant URL format. E.g.:
         #   file://foo.diff -> file:foo.diff
         if urlp.scheme in self._netloc_forbidden:
-            uri = re.sub("(?<=:)//(?!/)", "", uri, 1)
+            uri = re.sub(r"(?<=:)//(?!/)", "", uri, count=1)
             reparse = 1
 
         if reparse:
@@ -460,7 +461,7 @@ def uri_replace(ud, uri_find, uri_replace, replacements, d, mirrortarball=None):
                 for k in replacements:
                     uri_replace_decoded[loc] = uri_replace_decoded[loc].replace(k, replacements[k])
                 #bb.note("%s %s %s" % (regexp, uri_replace_decoded[loc], uri_decoded[loc]))
-                result_decoded[loc] = re.sub(regexp, uri_replace_decoded[loc], uri_decoded[loc], 1)
+                result_decoded[loc] = re.sub(regexp, uri_replace_decoded[loc], uri_decoded[loc], count=1)
             if loc == 2:
                 # Handle path manipulations
                 basename = None
@@ -499,30 +500,30 @@ def fetcher_init(d):
     Calls before this must not hit the cache.
     """
 
-    revs = bb.persist_data.persist('BB_URI_HEADREVS', d)
-    try:
-        # fetcher_init is called multiple times, so make sure we only save the
-        # revs the first time it is called.
-        if not bb.fetch2.saved_headrevs:
-            bb.fetch2.saved_headrevs = dict(revs)
-    except:
-        pass
+    with bb.persist_data.persist('BB_URI_HEADREVS', d) as revs:
+        try:
+            # fetcher_init is called multiple times, so make sure we only save the
+            # revs the first time it is called.
+            if not bb.fetch2.saved_headrevs:
+                bb.fetch2.saved_headrevs = dict(revs)
+        except:
+            pass
 
-    # When to drop SCM head revisions controlled by user policy
-    srcrev_policy = d.getVar('BB_SRCREV_POLICY') or "clear"
-    if srcrev_policy == "cache":
-        logger.debug("Keeping SRCREV cache due to cache policy of: %s", srcrev_policy)
-    elif srcrev_policy == "clear":
-        logger.debug("Clearing SRCREV cache due to cache policy of: %s", srcrev_policy)
-        revs.clear()
-    else:
-        raise FetchError("Invalid SRCREV cache policy of: %s" % srcrev_policy)
+        # When to drop SCM head revisions controlled by user policy
+        srcrev_policy = d.getVar('BB_SRCREV_POLICY') or "clear"
+        if srcrev_policy == "cache":
+            logger.debug("Keeping SRCREV cache due to cache policy of: %s", srcrev_policy)
+        elif srcrev_policy == "clear":
+            logger.debug("Clearing SRCREV cache due to cache policy of: %s", srcrev_policy)
+            revs.clear()
+        else:
+            raise FetchError("Invalid SRCREV cache policy of: %s" % srcrev_policy)
 
-    _checksum_cache.init_cache(d.getVar("BB_CACHEDIR"))
+        _checksum_cache.init_cache(d.getVar("BB_CACHEDIR"))
 
-    for m in methods:
-        if hasattr(m, "init"):
-            m.init(d)
+        for m in methods:
+            if hasattr(m, "init"):
+                m.init(d)
 
 def fetcher_parse_save():
     _checksum_cache.save_extras()
@@ -536,8 +537,8 @@ def fetcher_compare_revisions(d):
     when bitbake was started and return true if they have changed.
     """
 
-    headrevs = dict(bb.persist_data.persist('BB_URI_HEADREVS', d))
-    return headrevs != bb.fetch2.saved_headrevs
+    with dict(bb.persist_data.persist('BB_URI_HEADREVS', d)) as headrevs:
+        return headrevs != bb.fetch2.saved_headrevs
 
 def mirror_from_string(data):
     mirrors = (data or "").replace('\\n',' ').split()
@@ -1010,6 +1011,7 @@ def build_mirroruris(origud, mirrors, ld):
                     newud = FetchData(newuri, ld)
                     newud.ignore_checksums = True
                     newud.setup_localpath(ld)
+                    newud.origud = ud
                 except bb.fetch2.BBFetchException as e:
                     logger.debug("Mirror fetch failure for url %s (original url: %s)" % (newuri, origud.url))
                     logger.debug(str(e))
@@ -1519,7 +1521,10 @@ class FetchMethod(object):
         if unpack:
             tar_cmd = 'tar --extract --no-same-owner'
             if 'striplevel' in urldata.parm:
-                tar_cmd += ' --strip-components=%s' %  urldata.parm['striplevel']
+                striplevel = urldata.parm['striplevel']
+                if not striplevel.isdigit():
+                    raise UnpackError("Invalid striplevel parameter: %s" % striplevel, urldata.url)
+                tar_cmd += ' --strip-components=%s' % striplevel
             if file.endswith('.tar'):
                 cmd = '%s -f %s' % (tar_cmd, file)
             elif file.endswith('.tgz') or file.endswith('.tar.gz') or file.endswith('.tar.Z'):
@@ -1559,24 +1564,27 @@ class FetchMethod(object):
             elif file.endswith('.rpm') or file.endswith('.srpm'):
                 if 'extract' in urldata.parm:
                     unpack_file = urldata.parm.get('extract')
-                    cmd = 'rpm2cpio.sh %s | cpio -id %s' % (file, unpack_file)
+                    cmd = 'rpm2cpio.sh %s | cpio --no-absolute-filenames -id %s' % (file, unpack_file)
                     iterate = True
                     iterate_file = unpack_file
                 else:
-                    cmd = 'rpm2cpio.sh %s | cpio -id' % (file)
+                    cmd = 'rpm2cpio.sh %s | cpio --no-absolute-filenames -id' % (file)
             elif file.endswith('.deb') or file.endswith('.ipk'):
                 output = subprocess.check_output(['ar', '-t', file], preexec_fn=subprocess_setup)
                 datafile = None
+                valid_datafiles = ('data.tar', 'data.tar.gz', 'data.tar.xz',
+                                   'data.tar.zst', 'data.tar.bz2', 'data.tar.lzma')
                 if output:
                     for line in output.decode().splitlines():
-                        if line.startswith('data.tar.'):
+                        if line in valid_datafiles:
                             datafile = line
                             break
                     else:
-                        raise UnpackError("Unable to unpack deb/ipk package - does not contain data.tar.* file", urldata.url)
+                        raise UnpackError("Unable to unpack deb/ipk package - does not contain supported data.tar* file", urldata.url)
                 else:
                     raise UnpackError("Unable to unpack deb/ipk package - could not list contents", urldata.url)
-                cmd = 'ar x %s %s && %s -p -f %s && rm %s' % (file, datafile, tar_cmd, datafile, datafile)
+                quoted_datafile = shlex.quote(datafile)
+                cmd = 'ar x %s %s && %s -p -f %s && rm %s' % (shlex.quote(file), quoted_datafile, tar_cmd, quoted_datafile, quoted_datafile)
 
         # If 'subdir' param exists, create a dir and use it as destination for unpack cmd
         if 'subdir' in urldata.parm:
@@ -1606,7 +1614,7 @@ class FetchMethod(object):
                     if urlpath.find("/") != -1:
                         destdir = urlpath.rsplit("/", 1)[0] + '/'
                         bb.utils.mkdirhier("%s/%s" % (unpackdir, destdir))
-                cmd = 'cp -fpPRH "%s" "%s"' % (file, destdir)
+                cmd = 'cp --force --preserve=timestamps --no-dereference --recursive -H "%s" "%s"' % (file, destdir)
         else:
             urldata.unpack_tracer.unpack("archive-extract", unpackdir)
 
@@ -1662,13 +1670,13 @@ class FetchMethod(object):
         if not hasattr(self, "_latest_revision"):
             raise ParameterError("The fetcher for this URL does not support _latest_revision", ud.url)
 
-        revs = bb.persist_data.persist('BB_URI_HEADREVS', d)
-        key = self.generate_revision_key(ud, d, name)
-        try:
-            return revs[key]
-        except KeyError:
-            revs[key] = rev = self._latest_revision(ud, d, name)
-            return rev
+        with bb.persist_data.persist('BB_URI_HEADREVS', d) as revs:
+            key = self.generate_revision_key(ud, d, name)
+            try:
+                return revs[key]
+            except KeyError:
+                revs[key] = rev = self._latest_revision(ud, d, name)
+                return rev
 
     def sortable_revision(self, ud, d, name):
         latest_rev = self._build_revision(ud, d, name)

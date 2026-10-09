@@ -87,7 +87,7 @@ class Wget(FetchMethod):
         if not ud.localfile:
             ud.localfile = d.expand(urllib.parse.unquote(ud.host + ud.path).replace("/", "."))
 
-        self.basecmd = d.getVar("FETCHCMD_wget") or "/usr/bin/env wget -t 2 -T 30"
+        self.basecmd = d.getVar("FETCHCMD_wget") or "/usr/bin/env wget -t 2 -T 100"
 
         if ud.type == 'ftp' or ud.type == 'ftps':
             self.basecmd += " --passive-ftp"
@@ -108,7 +108,8 @@ class Wget(FetchMethod):
 
         fetchcmd = self.basecmd
 
-        localpath = os.path.join(d.getVar("DL_DIR"), ud.localfile) + ".tmp"
+        dldir = os.path.realpath(d.getVar("DL_DIR"))
+        localpath = os.path.join(dldir, ud.localfile) + ".tmp"
         bb.utils.mkdirhier(os.path.dirname(localpath))
         fetchcmd += " -O %s" % shlex.quote(localpath)
 
@@ -128,11 +129,20 @@ class Wget(FetchMethod):
         uri = ud.url.split(";")[0]
         if os.path.exists(ud.localpath):
             # file exists, but we didnt complete it.. trying again..
-            fetchcmd += d.expand(" -c -P ${DL_DIR} '%s'" % uri)
+            fetchcmd += " -c -P " + dldir + " '" + uri + "'"
         else:
-            fetchcmd += d.expand(" -P ${DL_DIR} '%s'" % uri)
+            fetchcmd += " -P " + dldir + " '" + uri + "'"
 
         self._runwget(ud, d, fetchcmd, False)
+
+        # Sanity check since wget can pretend it succeed when it didn't
+        # Also, this used to happen if sourceforge sent us to the mirror page
+        if not os.path.exists(localpath):
+            raise FetchError("The fetch command returned success for url %s but %s doesn't exist?!" % (uri, localpath), uri)
+
+        if os.path.getsize(localpath) == 0:
+            os.remove(localpath)
+            raise FetchError("The fetch of %s resulted in a zero size file?! Deleting and failing since this isn't right." % (uri), uri)
 
         # Try and verify any checksum now, meaning if it isn't correct, we don't remove the
         # original file, which might be a race (imagine two recipes referencing the same
@@ -142,15 +152,6 @@ class Wget(FetchMethod):
         # Remove the ".tmp" and move the file into position atomically
         # Our lock prevents multiple writers but mirroring code may grab incomplete files
         os.rename(localpath, localpath[:-4])
-
-        # Sanity check since wget can pretend it succeed when it didn't
-        # Also, this used to happen if sourceforge sent us to the mirror page
-        if not os.path.exists(ud.localpath):
-            raise FetchError("The fetch command returned success for url %s but %s doesn't exist?!" % (uri, ud.localpath), uri)
-
-        if os.path.getsize(ud.localpath) == 0:
-            os.remove(ud.localpath)
-            raise FetchError("The fetch of %s resulted in a zero size file?! Deleting and failing since this isn't right." % (uri), uri)
 
         return True
 
@@ -302,15 +303,70 @@ class Wget(FetchMethod):
             http_error_403 = http_error_405
 
 
+        def _url_origin(url):
+            parsed = urllib.parse.urlsplit(url)
+            scheme = parsed.scheme.lower()
+            host = parsed.hostname.lower() if parsed.hostname else ""
+            port = parsed.port
+            if port is None:
+                port = {"http": 80, "https": 443}.get(scheme)
+            return (scheme, host, port)
+
+        def _same_origin(url_a, url_b):
+            return _url_origin(url_a) == _url_origin(url_b)
+
         class FixedHTTPRedirectHandler(urllib.request.HTTPRedirectHandler):
             """
-            urllib2.HTTPRedirectHandler resets the method to GET on redirect,
-            when we want to follow redirects using the original method.
+            urllib2.HTTPRedirectHandler before 3.13 has two flaws:
+            
+            It resets the method to GET on redirect when we want to follow
+            redirects using the original method (typically HEAD). This was fixed
+            in 759e8e7.
+
+            It also doesn't handle 308 (Permanent Redirect). This was fixed in
+            c379bc5.
+
+            Until we depend on Python 3.13 onwards, copy the redirect_request
+            method to fix these issues.
+
+            Additionally, strip sensitive headers (Authorization, Cookie) when
+            redirecting to a different origin to avoid credential leaks.
             """
             def redirect_request(self, req, fp, code, msg, headers, newurl):
-                newreq = urllib.request.HTTPRedirectHandler.redirect_request(self, req, fp, code, msg, headers, newurl)
-                newreq.get_method = req.get_method
-                return newreq
+                m = req.get_method()
+                if (not (code in (301, 302, 303, 307, 308) and m in ("GET", "HEAD")
+                    or code in (301, 302, 303) and m == "POST")):
+                    raise urllib.HTTPError(req.full_url, code, msg, headers, fp)
+
+                # Strictly (according to RFC 2616), 301 or 302 in response to
+                # a POST MUST NOT cause a redirection without confirmation
+                # from the user (of urllib.request, in this case).  In practice,
+                # essentially all clients do redirect in this case, so we do
+                # the same.
+
+                # Be conciliant with URIs containing a space.  This is mainly
+                # redundant with the more complete encoding done in http_error_302(),
+                # but it is kept for compatibility with other callers.
+                newurl = newurl.replace(' ', '%20')
+
+                CONTENT_HEADERS = ("content-length", "content-type")
+                SENSITIVE_REDIRECT_HEADERS = ("authorization", "cookie")
+                same_origin = _same_origin(req.get_full_url(), newurl)
+                newheaders = {}
+                for k, v in req.headers.items():
+                    header = k.lower()
+                    if header in CONTENT_HEADERS:
+                        continue
+                    if not same_origin and header in SENSITIVE_REDIRECT_HEADERS:
+                        continue
+                    newheaders[k] = v
+                return urllib.request.Request(newurl,
+                            method="HEAD" if m == "HEAD" else "GET",
+                            headers=newheaders,
+                            origin_req_host=req.origin_req_host,
+                            unverifiable=True)
+
+            http_error_308 = urllib.request.HTTPRedirectHandler.http_error_302
 
         # We need to update the environment here as both the proxy and HTTPS
         # handlers need variables set. The proxy needs http_proxy and friends to
@@ -343,8 +399,11 @@ class Wget(FetchMethod):
             opener = urllib.request.build_opener(*handlers)
 
             try:
-                uri_base = ud.url.split(";")[0]
-                uri = "{}://{}{}".format(urllib.parse.urlparse(uri_base).scheme, ud.host, ud.path)
+                parts = urllib.parse.urlparse(ud.url.split(";")[0])
+                if parts.query:
+                    uri = "{}://{}{}?{}".format(parts.scheme, parts.netloc, parts.path, parts.query)
+                else:
+                    uri = "{}://{}{}".format(parts.scheme, parts.netloc, parts.path)
                 r = urllib.request.Request(uri)
                 r.get_method = lambda: "HEAD"
                 # Some servers (FusionForge, as used on Alioth) require that the
@@ -370,7 +429,7 @@ class Wget(FetchMethod):
                 except (FileNotFoundError, netrc.NetrcParseError):
                     pass
 
-                with opener.open(r, timeout=30) as response:
+                with opener.open(r, timeout=100) as response:
                     pass
             except (urllib.error.URLError, ConnectionResetError, TimeoutError) as e:
                 if try_again:

@@ -58,16 +58,12 @@ Project. Most find that it is best to have a native Linux machine
 function as the development host. However, it is possible to use a
 system that does not run Linux as its operating system as your
 development host. When you have a Mac or Windows-based system, you can
-set it up as the development host by using
-`CROPS <https://github.com/crops/poky-container>`__, which leverages
-`Docker Containers <https://www.docker.com/>`__. Once you take the steps
-to set up a CROPS machine, you effectively have access to a shell
+set it up as the development host by using an :wikipedia:`OCI container
+<Open_Container_Initiative>` (using `Docker <https://www.docker.com/>`__ or
+`Podman <https://podman.io/>`__). Once you take the steps
+to set up container, you effectively have access to a shell
 environment that is similar to what you see when using a Linux-based
-development host. For the steps needed to set up a system using CROPS,
-see the
-":ref:`dev-manual/start:setting up to use cross platforms (crops)`"
-section in
-the Yocto Project Development Tasks Manual.
+development host.
 
 If your development host is going to be a system that runs a Linux
 distribution, you must still take steps to prepare the system
@@ -87,7 +83,7 @@ are several ways of working in the Yocto Project environment:
    which uses
    BitBake, in a command-line environment from a shell on your
    development host. You can accomplish this from a host that is a
-   native Linux machine or from a host that has been set up with CROPS.
+   native Linux machine or from a container.
    Either way, you create, modify, and build images and applications all
    within a shell-based environment using components and tools available
    through your Linux distribution and the Yocto Project.
@@ -172,7 +168,7 @@ these tarballs gives you a snapshot of the released files.
       BSP repository and the Source Directory (i.e. ``poky``)
       repository. For example, if you have checked out the "&DISTRO_NAME_NO_CAP;"
       branch of ``poky`` and you are going to use ``meta-intel``, be
-      sure to checkout the "&DISTRO_NAME_NO_CAP;" branch of ``meta-intel``.
+      sure to check out the "&DISTRO_NAME_NO_CAP;" branch of ``meta-intel``.
 
 In summary, here is where you can get the project files needed for
 development:
@@ -365,7 +361,7 @@ commands.
 .. note::
 
    -  For more information on Git, see
-      https://git-scm.com/documentation.
+      https://git-scm.com/docs.
 
    -  If you need to download Git, it is recommended that you add Git to
       your system through your distribution's "software store" (e.g. for
@@ -428,7 +424,7 @@ development branch in the repository. To help illustrate, consider the
 following example Git commands::
 
    $ cd ~
-   $ git clone git://git.yoctoproject.org/poky -b &DISTRO_NAME_NO_CAP;
+   $ git clone https://git.yoctoproject.org/poky -b &DISTRO_NAME_NO_CAP;
 
 In the previous example
 after moving to the home directory, the ``git clone`` command creates a
@@ -438,7 +434,7 @@ local branch named "&DISTRO_NAME_NO_CAP;", which tracks the upstream
 branch would ultimately affect the upstream "&DISTRO_NAME_NO_CAP;" branch
 of the ``poky`` repository.
 
-It is important to understand that when you create and checkout a local
+It is important to understand that when you create and check out a local
 working branch based on a branch name, your local environment matches
 the "tip" of that particular development branch at the time you created
 your local branch, which could be different from the files in the
@@ -461,14 +457,14 @@ releases.
 
 When you create a local copy of the Git repository, you also have access
 to all the tags in the upstream repository. Similar to branches, you can
-create and checkout a local working Git branch based on a tag name. When
+create and check out a local working Git branch based on a tag name. When
 you do this, you get a snapshot of the Git repository that reflects the
 state of the files when the change was made associated with that tag.
-The most common use is to checkout a working branch that matches a
+The most common use is to check out a working branch that matches a
 specific Yocto Project release. Here is an example::
 
    $ cd ~
-   $ git clone git://git.yoctoproject.org/poky
+   $ git clone https://git.yoctoproject.org/poky
    $ cd poky
    $ git fetch --tags
    $ git checkout tags/rocko-18.0.0 -b my_rocko-18.0.0
@@ -483,7 +479,7 @@ whose "HEAD" matches the commit in the repository associated with the
 "rocko-18.0.0" tag. The files in your repository now exactly match that
 particular Yocto Project release as it is tagged in the upstream Git
 repository. It is important to understand that when you create and
-checkout a local working branch based on a tag, your environment matches
+check out a local working branch based on a tag, your environment matches
 a specific point in time and not the entire development branch (i.e.
 from the "tip" of the branch backwards).
 
@@ -496,7 +492,7 @@ you can manage with a small set of basic operations and workflows once
 you understand the basic philosophy behind Git. You do not have to be an
 expert in Git to be functional. A good place to look for instruction on
 a minimal set of Git commands is
-`here <https://git-scm.com/documentation>`__.
+`here <https://git-scm.com/docs>`__.
 
 The following list of Git commands briefly describes some basic Git
 operations as a way to get started. As with any set of commands, this

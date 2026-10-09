@@ -78,6 +78,10 @@ class OETestResult(_TestResult):
                     self.shownmsg.append(test.id())
                     break
 
+    # Python 3.12 added this, stub it out for now
+    def addDuration(self, test, elapsed):
+         pass
+
     def logSummary(self, component, context_msg=''):
         elapsed_time = self.tc._run_end_time - self.tc._run_start_time
         self.tc.logger.info("SUMMARY:")
@@ -357,7 +361,7 @@ class OETestResultJSONHelper(object):
             os.makedirs(write_dir, exist_ok=True)
         test_results = self._get_existing_testresults_if_available(write_dir)
         test_results[result_id] = {'configuration': configuration, 'result': test_result}
-        json_testresults = json.dumps(test_results, sort_keys=True, indent=4)
+        json_testresults = json.dumps(test_results, sort_keys=True, indent=1)
         self._write_file(write_dir, self.testresult_filename, json_testresults)
         if has_bb:
             bb.utils.unlockfile(lf)

@@ -73,7 +73,7 @@ The following steps describe how to set up the AUH utility:
    onto your development host. The following command uses Git to create
    a local copy of the repository on your system::
 
-      $ git clone git://git.yoctoproject.org/auto-upgrade-helper
+      $ git clone https://git.yoctoproject.org/auto-upgrade-helper
       Cloning into 'auto-upgrade-helper'... remote: Counting objects: 768, done.
       remote: Compressing objects: 100% (300/300), done.
       remote: Total 768 (delta 499), reused 703 (delta 434)
@@ -333,7 +333,7 @@ Manually Upgrading a Recipe
 
 If for some reason you choose not to upgrade recipes using
 :ref:`dev-manual/upgrading-recipes:Using the Auto Upgrade Helper (AUH)` or
-by :ref:`dev-manual/upgrading-recipes:Using \`\`devtool upgrade\`\``,
+by :ref:`dev-manual/upgrading-recipes:Using ``devtool upgrade```,
 you can manually edit the recipe files to upgrade the versions.
 
 .. note::

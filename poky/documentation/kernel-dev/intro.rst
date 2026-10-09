@@ -23,11 +23,7 @@ whose Git repositories you can view in the Yocto
 heading. New recipes for the release track the latest Linux kernel
 upstream developments from https://www.kernel.org and introduce
 newly-supported platforms. Previous recipes in the release are refreshed
-and supported for at least one additional Yocto Project release. As they
-align, these previous releases are updated to include the latest from
-the Long Term Support Initiative (LTSI) project. You can learn more
-about Yocto Linux kernels and LTSI in the
-":ref:`kernel-dev/concepts-appx:yocto project kernel development and maintenance`" section.
+and supported for at least one additional Yocto Project release.
 
 Also included is a Yocto Linux kernel development recipe
 (``linux-yocto-dev.bb``) should you want to work with the very latest in
@@ -122,7 +118,7 @@ general information and references for further information.
    Using ``devtool`` requires that you have a clean build
    of the image. For
    more information, see the
-   ":ref:`kernel-dev/common:getting ready to develop using \`\`devtool\`\``"
+   ":ref:`kernel-dev/common:getting ready to develop using ``devtool```"
    section.
 
    Using traditional kernel development requires that you have the
